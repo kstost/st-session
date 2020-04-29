@@ -17,7 +17,7 @@ const query = require('st-mysql')({
 });
 const stsession = require("./module_working/st-session/st-session")(query, {
     table: 'session10',
-    max_age: 1,
+    max_age: 3600,
     keep_lasting: true,
     basics: {
         Path: '/',
