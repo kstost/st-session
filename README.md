@@ -39,8 +39,8 @@ app.get('/cookietest', function (req, res) {
 
         // 세션 데이터를 기록합니다
         // 세번째 인자의 내용을 기록합니다
-        // 네번째 인자를 true 로 주면 기존에 기록된 세션데이터에 세번째 인자 내용을 더합니다
-        // 네번째 인자를 false 로 주면 기존에 기록된 세션데이터에 세번째 인자 내용을 더하지 않고 덮어씁니다
+        // 네번째 인자를 false 로 주면 기존에 기록된 세션데이터에 세번째 인자 내용을 더합니다
+        // 네번째 인자를 true 로 주면 기존에 기록된 세션데이터에 세번째 인자 내용을 더하지 않고 덮어씁니다
         session_data = await stsession.set_attributes(req, res, {data: 'hello'});
         
         res.send(session_data);
