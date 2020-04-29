@@ -15,7 +15,7 @@ const query = require('st-mysql')({
     database: '디비이름',
     flat: true
 });
-const stsession = require("./module_working/st-session/st-session")(query, {
+const stsession = require("st-session")(query, {
     table: 'session10',
     max_age: 3600,
     keep_lasting: true,
