@@ -2,8 +2,6 @@ const stcookie = require("st-cookie-parser")
 module.exports = (function (query, option) {
     option.table = option.table ? option.table : 'st_session';
     option.sessionid = option.sessionid ? option.sessionid : 'STSESSID';
-    option.max_age = option.max_age !== undefined ? option.max_age : 3600;
-    option.keep_lasting = option.keep_lasting !== undefined ? option.keep_lasting : true;
     option.basics = option.basics ? option.basics : {
         Path: '/',
         SameSite: 'Lax',
@@ -37,7 +35,17 @@ module.exports = (function (query, option) {
         return (async () => {
             let sessid = makeid(40);
             while (true) {
-                result = await query("insert into " + option.table + " (session_id, expires, data) values (?,?,?)", [sessid, option.max_age + timestamp(), JSON.stringify(value)]);
+                let max_age = option.basics['Max-Age'];
+                if (option.keep_lasting_time) {
+                    option.basics['Max-Age'] = option.keep_lasting_time.last; // 쿠키 유지시간 설정
+                    max_age = option.keep_lasting_time.renew; // 세션ID갱신 주기 설정
+                    max_age += timestamp();
+                } else if (max_age === undefined) {
+                    max_age = 0;
+                } else if (max_age !== undefined) {
+                    max_age += timestamp();
+                }
+                result = await query("insert into " + option.table + " (session_id, expires, data) values (?,?,?)", [sessid, max_age, JSON.stringify(value)]);
                 let error = result.errno && result.constructor.name === 'Error';
                 if (!error) {
                     let cookie = get_cookie(req);
@@ -45,12 +53,8 @@ module.exports = (function (query, option) {
                     req.headers.cookie = stcookie.stringify(cookie);
                     let newCookie = {
                         [option.sessionid]: sessid,
-                        'Max-Age': option.max_age,
                         ...option.basics,
                     };
-                    if (option.keep_lasting) {
-                        delete newCookie['Max-Age'];
-                    }
                     res.set('Set-Cookie', stcookie.stringify(newCookie));
                     break;
                 } else {
@@ -86,17 +90,15 @@ module.exports = (function (query, option) {
     return {
         get_attributes(req, res) {
             return (async () => {
-                let query_ = "";
                 let result = await query("select * from " + option.table + " where session_id = ?", [get_sessid(req)]);
                 let error = result.errno && result.constructor.name === 'Error';
                 if (!error && result.length === 1) {
                     let sess = result[0];
                     let data = JSON.parse(sess.data);
-                    let exp = Number(sess.expires) < timestamp();
+                    let exp = Number(sess.expires) > 0 && Number(sess.expires) < timestamp();
                     if (exp) {
                         await query("delete from " + option.table + " where session_id = ?", [get_sessid(req)]);
                         await create_new_session(req, res, data);
-                    } else {
                     }
                     return data;
                 } else {
