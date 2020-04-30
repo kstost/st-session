@@ -17,8 +17,10 @@ const query = require('st-mysql')({
 });
 const stsession = require("st-session")(query, {
     table: 'session10',
-    max_age: 3600,
-    keep_lasting: true,
+    keep_lasting: {
+        renew: 100,
+        last: 3600 * 24 * 365 * 10,
+    },
     basics: {
         Path: '/',
         SameSite: 'Lax',
