@@ -50,7 +50,7 @@ module.exports = (function (query, option) {
                     max_age += timestamp();
                 }
 
-                result = await query("insert into " + option.table + " (session_id, expires, data) values (?,?,?)", [sessid, max_age, JSON.stringify(value)]);
+                let result = await query("insert into " + option.table + " (session_id, expires, data) values (?,?,?)", [sessid, max_age, JSON.stringify(value)]);
                 let error = result.errno && result.constructor.name === 'Error';
                 if (!error) {
                     //-----------------
