@@ -143,14 +143,11 @@ module.exports = (function (query, option) {
                     } else {
                         await query("delete from " + option.table + " where session_id=?", [get_sessid(req)]);
                         let newCookie = {
+                            [option.sessionid]: get_sessid(req),
                             ...option.basics,
                             'Max-Age': 0,
-                            [option.sessionid]: get_sessid(req),
                         };
                         res.set('Set-Cookie', stcookie.stringify(newCookie));
-                        // res.set('Set-Cookie', stcookie.stringify({
-                        //     'Max-Age': 0,
-                        // }));
                     }
                 }
                 return value;
