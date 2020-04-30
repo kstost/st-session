@@ -75,13 +75,10 @@ module.exports = (function (query, option) {
         })();
     }
 
-    function set_cookie(req, sessid, max_age) {
+    function set_cookie(req, sessid) {
         if (sessid && req) {
             let cookie = get_cookie(req);
             cookie[option.sessionid] = sessid;
-            if (max_age !== undefined) {
-                cookie['Max-Age'] = max_age;
-            }
             req.headers.cookie = stcookie.stringify(cookie);
         }
     }
@@ -145,7 +142,10 @@ module.exports = (function (query, option) {
                         }
                     } else {
                         await query("delete from " + option.table + " where session_id=?", [get_sessid(req)]);
-                        set_cookie(req, get_sessid(req), 0);
+                        res.set('Set-Cookie', stcookie.stringify({
+                            'Max-Age': 0,
+                            [option.sessionid]: get_sessid(req),
+                        }));
                     }
                 }
                 return value;
