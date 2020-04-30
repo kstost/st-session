@@ -28,6 +28,19 @@ const stsession = require("st-session")(query, {
         Secure: true,
     }
 })
+/*
+* keep_lasting_time
+값을 안주면 쿠키는 브라우저가 꺼지면 브라우저에서 제거된다
+하지만 안끄면 만료기간이 없어서 계속 유지된다
+서버입장에서는 무한히 남게된다. 따라서 Max-Age 를 안주는것은 서버 입장에서는 추천되지 않는다
+
+* keep_lasting_time
+keep_lasting_time.last; // 쿠키 유지시간 설정
+keep_lasting_time.renew; // 세션ID갱신 주기 설정
+이렇게 주면 쿠키의 Expires 에 last 값이 들어간다
+예를 들어 last 에 3600 * 24 를 넣으면 브라우저의 쿠키에 하루간 살아있게 된다
+그리고 renew에 3600 을 넣으면 한시간마다 새로운 세션ID를 다시 발급하며 이때에 쿠키의 Expires 도 다시 설정된다
+*/
 app.listen(port, function () {
 })
 app.get('/cookietest', function (req, res) {
