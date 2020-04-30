@@ -35,16 +35,21 @@ module.exports = (function (query, option) {
         return (async () => {
             let sessid = makeid(40);
             while (true) {
-                let max_age = option.basics['Max-Age'];
+                let max_age = stcookie.expire_time(option.basics); // option.basics['Max-Age'];
+                delete option.basics['Max-Age'];
+                delete option.basics['Expires'];
+                if (max_age > -1) {
+                    option.basics['Max-Age'] = max_age;
+                    max_age += timestamp();
+                } else {
+                    max_age = 0;
+                }
                 if (option.keep_lasting_time) {
                     option.basics['Max-Age'] = option.keep_lasting_time.last; // 쿠키 유지시간 설정
                     max_age = option.keep_lasting_time.renew; // 세션ID갱신 주기 설정
                     max_age += timestamp();
-                } else if (max_age === undefined) {
-                    max_age = 0;
-                } else if (max_age !== undefined) {
-                    max_age += timestamp();
                 }
+
                 result = await query("insert into " + option.table + " (session_id, expires, data) values (?,?,?)", [sessid, max_age, JSON.stringify(value)]);
                 let error = result.errno && result.constructor.name === 'Error';
                 if (!error) {
