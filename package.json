@@ -1,6 +1,6 @@
 {
    "name": "st-session",
-   "version": "1.1.1",
+   "version": "1.1.2",
    "description": "",
    "main": "st-session.js",
    "scripts": {
