@@ -53,9 +53,9 @@ module.exports = (function (query, option) {
                 result = await query("insert into " + option.table + " (session_id, expires, data) values (?,?,?)", [sessid, max_age, JSON.stringify(value)]);
                 let error = result.errno && result.constructor.name === 'Error';
                 if (!error) {
-                    let cookie = get_cookie(req);
-                    cookie[option.sessionid] = sessid;
-                    req.headers.cookie = stcookie.stringify(cookie);
+                    //-----------------
+                    set_cookie(req, sessid);
+                    //-----------------
                     let newCookie = {
                         [option.sessionid]: sessid,
                         ...option.basics,
@@ -73,6 +73,17 @@ module.exports = (function (query, option) {
             }
             return sessid;
         })();
+    }
+
+    function set_cookie(req, sessid, max_age) {
+        if (sessid && req) {
+            let cookie = get_cookie(req);
+            cookie[option.sessionid] = sessid;
+            if (max_age !== undefined) {
+                cookie['Max-Age'] = max_age;
+            }
+            req.headers.cookie = stcookie.stringify(cookie);
+        }
     }
 
     function get_cookie(req) {
@@ -126,9 +137,15 @@ module.exports = (function (query, option) {
                             ...value
                         };
                     }
-                    let result = await query("update " + option.table + " set data=? where session_id=?", [JSON.stringify(value), get_sessid(req)]);
-                    if (!result.affectedRows || result.constructor.name === 'Error') {
-                        await create_new_session(req, res, value);
+                    let values = [JSON.stringify(value), get_sessid(req)];
+                    if (Object.keys(value).length > 0) {
+                        let result = await query("update " + option.table + " set data=? where session_id=?", values);
+                        if (!result.affectedRows || result.constructor.name === 'Error') {
+                            await create_new_session(req, res, value);
+                        }
+                    } else {
+                        await query("delete from " + option.table + " where session_id=?", [get_sessid(req)]);
+                        set_cookie(req, get_sessid(req), 0);
                     }
                 }
                 return value;
